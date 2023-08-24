@@ -38,7 +38,7 @@ func TestListNotes(t *testing.T) {
 	}
 
 	// Call the 'listNotes' function
-	err = listNotes(conn)
+	err = EnterpriseNotes.listNotes(conn)
 	if err != nil {
 		t.Fatalf("Failed to list notes: %v", err)
 	}
@@ -53,7 +53,7 @@ func TestAddNote(t *testing.T) {
 	defer conn.Close(context.Background())
 
 	// Call the 'addNote' function
-	err = addNote(conn, "New note")
+	err = EnterpriseNotes.addNote(conn, "New note")
 	if err != nil {
 		t.Fatalf("Failed to add note: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestUpdateNote(t *testing.T) {
 	}
 
 	// Call the 'updateNote' function
-	err = updateNote(conn, 1, "New description")
+	err = EnterpriseNotes.updateNote(conn, 1, "New description")
 	if err != nil {
 		t.Fatalf("Failed to update note: %v", err)
 	}
@@ -95,7 +95,7 @@ func TestRemoveNote(t *testing.T) {
 	}
 
 	// Call the 'removeNote' function
-	err = removeNote(conn, 1)
+	err = EnterpriseNotes.removeNote(conn, 1)
 	if err != nil {
 		t.Fatalf("Failed to remove note: %v", err)
 	}
