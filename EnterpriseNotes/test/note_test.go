@@ -1,83 +1,102 @@
-package test
+package main
 
 import (
+	"context"
 	"testing"
 
-	"github.com/AlexGithub777/EnterpriseNotes/internal/app"
+	"github.com/jackc/pgx/v5"
 )
 
-func TestCreateNote(t *testing.T) {
-	// Create sample notes using the CreateNote function
-	note1 := app.CreateNote("Note 1 Title", "Note 1 Content")
-	note2 := app.CreateNote("Note 2 Title", "Note 2 Content")
-
-	// Test that noteIds are automatically assigned
-	if note1.ID == note2.ID {
-		t.Errorf("Expected different noteIds for note1 and note2, but got the same: %d", note1.ID)
+func setup() (*pgx.Conn, error) {
+	// Create a connection to the test database
+	conn, err := pgx.Connect(context.Background(), "postgres://postgres:postgres@localhost:5432/test_database")
+	if err != nil {
+		return nil, err
 	}
 
-
-	// Add assertions to verify the properties of the created notes
-	if note1.Title != "Note 1 Title" {
-		t.Errorf("Expected title: %s, but got: %s", "Note 1 Title", note1.Title)
-	}
-	if note1.Content != "Note 1 Content" {
-		t.Errorf("Expected content: %s, but got: %s", "Note 1 Content", note1.Content)
-	}
-	// ... Add assertions for other properties if needed ...
-
-	// Similarly, add assertions for the properties of note2
-	if note2.Title != "Note 2 Title" {
-		t.Errorf("Expected title: %s, but got: %s", "Note 2 Title", note2.Title)
-	}
-	if note2.Content != "Note 2 Content" {
-		t.Errorf("Expected content: %s, but got: %s", "Note 2 Content", note2.Content)
+	// Create the 'notes' table (if it doesn't exist)
+	_, err = conn.Exec(context.Background(), "CREATE TABLE IF NOT EXISTS notes (id SERIAL PRIMARY KEY, description TEXT NOT NULL)")
+	if err != nil {
+		return nil, err
 	}
 
-	
+	return conn, nil
 }
 
-func TestGetNoteByID(t *testing.T) {
-	// Create sample notes using the CreateNote function
-	note1 := app.CreateNote("Note 1 Title", "Note 1 Content")
+func TestListNotes(t *testing.T) {
+	// Set up the test database connection
+	conn, err := setup()
+	if err != nil {
+		t.Fatalf("Failed to set up the test database: %v", err)
+	}
+	defer conn.Close(context.Background())
 
-	// Test getting a note by its ID
-	note, found := app.GetNoteByID(note1.ID)
-	if !found {
-		t.Error("Expected note to be found, but it wasn't")
+	// Insert some test data into the 'notes' table
+	_, err = conn.Exec(context.Background(), "INSERT INTO notes(description) VALUES('Note 1')")
+	if err != nil {
+		t.Fatalf("Failed to insert test data: %v", err)
 	}
-	if note.Title != "Note 1 Title" {
-		t.Errorf("Expected title: %s, but got: %s", "Note 1 Title", note.Title)
+
+	// Call the 'listNotes' function
+	err = listNotes(conn)
+	if err != nil {
+		t.Fatalf("Failed to list notes: %v", err)
 	}
-	// ... Add assertions for other properties if needed ...
+}
+
+func TestAddNote(t *testing.T) {
+	// Set up the test database connection
+	conn, err := setup()
+	if err != nil {
+		t.Fatalf("Failed to set up the test database: %v", err)
+	}
+	defer conn.Close(context.Background())
+
+	// Call the 'addNote' function
+	err = addNote(conn, "New note")
+	if err != nil {
+		t.Fatalf("Failed to add note: %v", err)
+	}
 }
 
 func TestUpdateNote(t *testing.T) {
-	// Create a sample note using the CreateNote function
-	note := app.CreateNote("Note Title", "Note Content")
+	// Set up the test database connection
+	conn, err := setup()
+	if err != nil {
+		t.Fatalf("Failed to set up the test database: %v", err)
+	}
+	defer conn.Close(context.Background())
 
-	// Test updating a note's title and content
-	updated := app.UpdateNote(note.ID, "Updated Title", "Updated Content")
-	if !updated {
-		t.Error("Expected note to be updated, but it wasn't")
+	// Insert a test note into the 'notes' table
+	_, err = conn.Exec(context.Background(), "INSERT INTO notes(description) VALUES('Old description')")
+	if err != nil {
+		t.Fatalf("Failed to insert test data: %v", err)
 	}
 
-	// ... Add assertions to verify the updated properties ...
+	// Call the 'updateNote' function
+	err = updateNote(conn, 1, "New description")
+	if err != nil {
+		t.Fatalf("Failed to update note: %v", err)
+	}
 }
 
-func TestDeleteNote(t *testing.T) {
-	// Create a sample note using the CreateNote function
-	note := app.CreateNote("Note Title", "Note Content")
+func TestRemoveNote(t *testing.T) {
+	// Set up the test database connection
+	conn, err := setup()
+	if err != nil {
+		t.Fatalf("Failed to set up the test database: %v", err)
+	}
+	defer conn.Close(context.Background())
 
-	// Test deleting a note
-	deleted := app.DeleteNote(note.ID)
-	if !deleted {
-		t.Error("Expected note to be deleted, but it wasn't")
+	// Insert a test note into the 'notes' table
+	_, err = conn.Exec(context.Background(), "INSERT INTO notes(description) VALUES('Note to be deleted')")
+	if err != nil {
+		t.Fatalf("Failed to insert test data: %v", err)
 	}
 
-	// Add assertions to verify that the note is indeed deleted
-	_, found := app.GetNoteByID(note.ID)
-	if found {
-		t.Error("Expected note not to be found after deletion, but it was")
+	// Call the 'removeNote' function
+	err = removeNote(conn, 1)
+	if err != nil {
+		t.Fatalf("Failed to remove note: %v", err)
 	}
 }
