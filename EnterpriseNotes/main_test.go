@@ -1,31 +1,44 @@
 package main
 
 import (
+	"context"
 	"testing"
 
-	"github.com/pashagolub/pgxmock/v2"
+	"github.com/jackc/pgx/v5"
+	"github.com/stretchr/testify/assert"
 )
 
+var testConn *pgx.Conn
+
+func setupTest() {
+	// Connect to the test database
+	connConfig, _ := pgx.ParseConfig("postgres://postgres:postgres@localhost:5432/postgres")
+	conn, _ := pgx.ConnectConfig(context.Background(), connConfig)
+	testConn = conn
+}
+
+func teardownTest() {
+	// Close the testConn connection
+	testConn.Close(context.Background())
+}
 
 func TestListNotes(t *testing.T) {
-	// Mock the database connection
-	mock, err := pgxmock.NewPool()
+	setupTest()
+	defer teardownTest()
+
+	
+	err := ListNotes()
+	assert.NoError(t, err) // Ensure no error occurred
+}
+
+// ... Other test functions for addNote, updateNote, and removeNote
+
+func TestAddNote (t *testing.T) {
+	setupTest()
+	defer teardownTest()
+	// Insert test data into the test database
+	err := AddNote("Note Test")
 	if err != nil {
-		t.Fatalf("failed to create mock DB: %v", err)
+		t.Fatalf("Failed to add note: %v", err)
 	}
-	defer mock.Close()
-
-	// Create a new expected query and rows
-	expectedQuery := "SELECT * FROM notes"
-	rows := mock.NewRows([]string{"id", "description"}).
-		AddRow(1, "Note 1").
-		AddRow(2, "Note 2")
-
-	// Expect the query and return the mocked rows
-	mock.ExpectQuery(expectedQuery).WillReturnRows(rows)
-
-	// Call the function you want to test
-	err = ListNotes()
-
-	// Check for any errors during
 }

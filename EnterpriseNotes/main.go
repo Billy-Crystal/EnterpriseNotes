@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -27,7 +28,12 @@ func main() {
 	notesTable := `
 	CREATE TABLE IF NOT EXISTS notes (
 		id SERIAL PRIMARY KEY,
-		description TEXT NOT NULL
+		title TEXT NOT NULL,
+		description TEXT NOT NULL,
+		noteCreated TEXT NOT NULL,
+		noteStatus TEXT,
+		noteDelegation TEXT,
+		sharedUsers TEXT
 	)
 `
 	_, err = conn.Exec(context.Background(), notesTable)
@@ -50,11 +56,36 @@ func main() {
 		}
 
 	case "add":
-		err = addNote(os.Args[2])
+		var title, description string
+	
+		// Prompt the user to enter the title
+		fmt.Print("Enter title: ")
+		fmt.Scan(&title)
+	
+		// Prompt the user to enter the description
+		fmt.Print("Enter description: ")
+		fmt.Scan(&description)
+	
+		// You can set the default noteCreated and noteStatus values as needed
+		noteCreated := time.Now()
+		
+
+		// Format noteCreated into a string
+		formattedNoteCreated := noteCreated.Format(time.ANSIC)
+		fmt.Println(formattedNoteCreated)
+
+		noteStatus := "none"
+		noteDelegation := "none"
+		sharedUsers := "none"
+
+
+	
+		err = AddNote(title, description, formattedNoteCreated, noteStatus, noteDelegation, sharedUsers)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to add note: %v\n", err)
 			os.Exit(1)
 		}
+	
 
 	case "update":
 		n, err := strconv.ParseInt(os.Args[2], 10, 32)
@@ -92,21 +123,31 @@ func ListNotes() error {
 
 	for rows.Next() {
 		var id int
+		var title string
 		var description string
-		err := rows.Scan(&id, &description)
+		var noteCreated string
+		var noteStatus string
+		var noteDelegation string
+		var sharedUsers string
+		err := rows.Scan(&id, &title, &description, &noteCreated, &noteStatus, &noteDelegation, &sharedUsers)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%d. %s\n", id, description)
+		fmt.Printf("%d. Title: %s Description: %s %s Note Status: %s Note Delegation: %s Shared users: %s \n", id, title, description, noteCreated, noteStatus, noteDelegation, sharedUsers)
 	}
 
 	return rows.Err()
 }
 
-func addNote(description string) error {
-	_, err := conn.Exec(context.Background(), "INSERT INTO notes(description) VALUES($1)", description)
+func AddNote(title string, description string, noteCreated string, noteStatus string, noteDelegation string, sharedUsers string) error {
+	_, err := conn.Exec(
+		context.Background(),
+		"INSERT INTO notes(title, description, noteCreated, noteStatus, noteDelegation, sharedUsers) VALUES($1, $2, $3, $4, $5, $6)",
+		title, description, noteCreated, noteStatus, noteDelegation, sharedUsers,
+	)
 	return err
 }
+
 
 func updateNote(noteID int, description string) error {
 	_, err := conn.Exec(context.Background(), "UPDATE notes SET description=$1 WHERE id=$2", description, noteID)
