@@ -1,6 +1,7 @@
-How to write tests for pgx module
+How to write tests for pgx module - use mock database?
 
-How to store users in db
+How to store users in db?
 
-How to refernece shared users within note
+How to reference shared users within note
 
+should we store database data in a json and import?
