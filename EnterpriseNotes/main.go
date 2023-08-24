@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
@@ -57,14 +58,18 @@ func main() {
 
 	case "add":
 		var title, description string
+
+		scanner := bufio.NewScanner(os.Stdin)
 	
 		// Prompt the user to enter the title
 		fmt.Print("Enter title: ")
-		fmt.Scan(&title)
+		scanner.Scan()
+        title = scanner.Text()
 	
 		// Prompt the user to enter the description
 		fmt.Print("Enter description: ")
-		fmt.Scan(&description)
+		scanner.Scan()
+        description = scanner.Text()
 	
 		// You can set the default noteCreated and noteStatus values as needed
 		noteCreated := time.Now()
@@ -72,7 +77,7 @@ func main() {
 
 		// Format noteCreated into a string
 		formattedNoteCreated := noteCreated.Format(time.ANSIC)
-		fmt.Println(formattedNoteCreated)
+		//fmt.Println(formattedNoteCreated)
 
 		noteStatus := "none"
 		noteDelegation := "none"
