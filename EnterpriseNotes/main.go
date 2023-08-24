@@ -43,7 +43,7 @@ func main() {
 
 	switch os.Args[1] {
 	case "list":
-		err = listNotes()
+		err = ListNotes()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to list notes: %v\n", err)
 			os.Exit(1)
@@ -87,7 +87,7 @@ func main() {
 	}
 }
 
-func listNotes() error {
+func ListNotes() error {
 	rows, _ := conn.Query(context.Background(), "SELECT * FROM notes")
 
 	for rows.Next() {
