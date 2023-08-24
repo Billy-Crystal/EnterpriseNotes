@@ -133,7 +133,7 @@ func ListNotes() error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%d. Title: %s Description: %s %s Note Status: %s Note Delegation: %s Shared users: %s \n", id, title, description, noteCreated, noteStatus, noteDelegation, sharedUsers)
+		fmt.Printf("Note ID:%d.\n Title: %s\n Description: %s\n %s\n Note Status: %s\n Note Delegation: %s\n Shared users: %s \n", id, title, description, noteCreated, noteStatus, noteDelegation, sharedUsers)
 	}
 
 	return rows.Err()
