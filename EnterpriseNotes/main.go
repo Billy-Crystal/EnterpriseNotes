@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"os"
@@ -34,7 +33,8 @@ func main() {
 		noteCreated TEXT NOT NULL,
 		noteStatus TEXT,
 		noteDelegation TEXT,
-		sharedUsers TEXT
+		sharedUsers TEXT,
+		fts_text tsvector
 	)
 `
 	_, err = conn.Exec(context.Background(), notesTable)
@@ -57,19 +57,12 @@ func main() {
 		}
 
 	case "add":
-		var title, description string
-
-		scanner := bufio.NewScanner(os.Stdin)
-	
-		// Prompt the user to enter the title
-		fmt.Print("Enter title: ")
-		scanner.Scan()
-        title = scanner.Text()
-	
-		// Prompt the user to enter the description
-		fmt.Print("Enter description: ")
-		scanner.Scan()
-        description = scanner.Text()
+		if len(os.Args) < 4 {
+			fmt.Fprintln(os.Stderr, "Missing title and/or description")
+			os.Exit(1)
+		}
+		title := os.Args[2]
+		description := os.Args[3]
 	
 		// You can set the default noteCreated and noteStatus values as needed
 		noteCreated := time.Now()
@@ -116,6 +109,20 @@ func main() {
 			os.Exit(1)
 		}
 
+	case "search":
+        if len(os.Args) < 3 {
+            fmt.Fprintln(os.Stderr, "Missing search pattern")
+            os.Exit(1)
+        }
+        searchPattern := os.Args[2]
+
+        // Perform full-text search
+        err := SearchNotes(searchPattern)
+        if err != nil {
+            fmt.Fprintf(os.Stderr, "Unable to search notes: %v\n", err)
+            os.Exit(1)
+        }
+
 	default:
 		fmt.Fprintln(os.Stderr, "Invalid command")
 		printHelp()
@@ -124,34 +131,45 @@ func main() {
 }
 
 func ListNotes() error {
-	rows, _ := conn.Query(context.Background(), "SELECT * FROM notes")
+    query := `
+        SELECT id, title, description, noteCreated, noteStatus, noteDelegation, sharedUsers
+        FROM notes
+    `
+    rows, err := conn.Query(context.Background(), query)
+    if err != nil {
+        return err
+    }
+    defer rows.Close()
 
-	for rows.Next() {
-		var id int
-		var title string
-		var description string
-		var noteCreated string
-		var noteStatus string
-		var noteDelegation string
-		var sharedUsers string
-		err := rows.Scan(&id, &title, &description, &noteCreated, &noteStatus, &noteDelegation, &sharedUsers)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Note ID:%d.\n Title: %s\n Description: %s\n %s\n Note Status: %s\n Note Delegation: %s\n Shared users: %s \n", id, title, description, noteCreated, noteStatus, noteDelegation, sharedUsers)
-	}
+    for rows.Next() {
+        var id int
+        var title string
+        var description string
+        var noteCreated string
+        var noteStatus string
+        var noteDelegation string
+        var sharedUsers string
+        err := rows.Scan(&id, &title, &description, &noteCreated, &noteStatus, &noteDelegation, &sharedUsers)
+        if err != nil {
+            return err
+        }
+        fmt.Printf("Note ID:%d.\n Title: %s\n Description: %s\n Note Created: %s\n Note Status: %s\n Note Delegation: %s\n Shared users: %s \n",
+            id, title, description, noteCreated, noteStatus, noteDelegation, sharedUsers)
+    }
 
-	return rows.Err()
+    return rows.Err()
 }
+
 
 func AddNote(title string, description string, noteCreated string, noteStatus string, noteDelegation string, sharedUsers string) error {
-	_, err := conn.Exec(
-		context.Background(),
-		"INSERT INTO notes(title, description, noteCreated, noteStatus, noteDelegation, sharedUsers) VALUES($1, $2, $3, $4, $5, $6)",
-		title, description, noteCreated, noteStatus, noteDelegation, sharedUsers,
-	)
-	return err
+    _, err := conn.Exec(
+        context.Background(),
+        "INSERT INTO notes(title, description, noteCreated, noteStatus, noteDelegation, sharedUsers, fts_text) VALUES($1, $2, $3, $4, $5, $6, to_tsvector('english', $1 || ' ' || $2 || ' ' || $4 || ' ' || $5 || ' ' || $6))",
+        title, description, noteCreated, noteStatus, noteDelegation, sharedUsers,
+    )
+    return err
 }
+
 
 
 func updateNote(noteID int, description string) error {
@@ -164,19 +182,43 @@ func removeNote(noteID int) error {
 	return err
 }
 
+func SearchNotes(pattern string) error {
+    query := fmt.Sprintf("SELECT id, title, description, noteCreated, noteStatus, noteDelegation, sharedUsers FROM notes WHERE fts_text @@ to_tsquery('english', '%s')", pattern)
+    rows, err := conn.Query(context.Background(), query)
+    if err != nil {
+        return err
+    }
+    defer rows.Close()
+
+    for rows.Next() {
+        var id int
+        var title, description, noteCreated, noteStatus, noteDelegation, sharedUsers string
+        if err := rows.Scan(&id, &title, &description, &noteCreated, &noteStatus, &noteDelegation, &sharedUsers); err != nil {
+            return err
+        }
+        fmt.Printf("Note ID:%d.\n Title: %s\n Description: %s\n %s\n Note Status: %s\n Note Delegation: %s\n Shared users: %s \n", id, title, description, noteCreated, noteStatus, noteDelegation, sharedUsers)
+    }
+
+    return nil
+}
+
+
 func printHelp() {
 	fmt.Print(`Notes pgx demo
 
 Usage:
 
   notes list
-  notes add description
-  notes update note_id description
-  notes remove note_id
+  notes add <title> <description>
+  notes search <search-pattern>
+  
 
 Example:
 
-  notes add 'Important note'
   notes list
+  notes add shopping oranges
+  notes add "Note title" "This is a note"
+  notes search shopping
+  notes search oranges
 `)
 }
