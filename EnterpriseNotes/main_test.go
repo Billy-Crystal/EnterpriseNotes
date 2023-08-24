@@ -4,33 +4,46 @@ import (
 	"context"
 	"testing"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/pashagolub/pgxmock/v2"
+	"github.com/stretchr/testify/assert"
 )
 
-var testConn *pgx.Conn
-
-func setupTest() {
-	// Connect to the test database
-	connConfig, _ := pgx.ParseConfig("postgres://postgres:postgres@localhost:5432/postgres")
-	conn, _ := pgx.ConnectConfig(context.Background(), connConfig)
-	testConn = conn
-}
-
-func teardownTest() {
-	// Close the testConn connection
-	testConn.Close(context.Background())
-}
 
 func TestListNotes(t *testing.T) {
-	setupTest()
-	defer teardownTest()
-	// Create a test context
+	
+	mockDB, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockDB.Close()
+
+	mockDB.ExpectQuery("SELECT id, title, description, noteCreated, noteStatus, noteDelegation, sharedUsers FROM notes").
+		WillReturnRows(pgxmock.NewRows([]string{"id", "title", "description", "noteCreated", "noteStatus", "noteDelegation", "sharedUsers"}).
+			AddRow(1, "Title 1", "Description 1", "2023-08-01", "Status 1", "Delegation 1", "User 1").
+			AddRow(2, "Title 2", "Description 2", "2023-08-02", "Status 2", "Delegation 2", "User 2"))
+
+
+
 	
 
-	// Perform your test
-	err := ListNotes(context.Background())
-	if err != nil {
-		t.Errorf("ListNotes returned an error: %v", err)
-	}
-}
 
+	conn, err := pgxmock.NewPool()
+	if err != nil {
+        return 
+    }
+
+
+
+	db := &MockDatabase{mockDB: conn.AsConn()}
+
+	// Call the ListNotes function and check the results
+	err = db.ListNotes(context.Background())
+	assert.NoError(t, err)
+
+	// Check if expectations were met
+	if err := mockDB.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+
+
+}
