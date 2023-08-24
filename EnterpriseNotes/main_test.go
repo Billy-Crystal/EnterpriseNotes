@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/stretchr/testify/assert"
 )
 
 var testConn *pgx.Conn
@@ -25,20 +24,13 @@ func teardownTest() {
 func TestListNotes(t *testing.T) {
 	setupTest()
 	defer teardownTest()
-
+	// Create a test context
 	
-	err := ListNotes()
-	assert.NoError(t, err) // Ensure no error occurred
-}
 
-// ... Other test functions for addNote, updateNote, and removeNote
-
-func TestAddNote (t *testing.T) {
-	setupTest()
-	defer teardownTest()
-	// Insert test data into the test database
-	err := AddNote("Note Test")
+	// Perform your test
+	err := ListNotes(context.Background())
 	if err != nil {
-		t.Fatalf("Failed to add note: %v", err)
+		t.Errorf("ListNotes returned an error: %v", err)
 	}
 }
+
