@@ -9,7 +9,7 @@ import (
 
 var DATABASE_URL = "postgres://postgres:postgres@localhost:5432/postgres"
 
-func SetupDatabase() (*db.PostgresDatabase, error) {
+func SetupDatabase() ( *db.PostgresDatabase, error) {
 	db, err := db.NewPostgresDatabase(DATABASE_URL)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to the database: %v", err)
