@@ -63,7 +63,7 @@ func main() {
         }
 
 	case "add":
-		if len(os.Args) < 5 {
+		if len(os.Args) > 5 {
 			fmt.Fprintln(os.Stderr, "Missing type or title or description")
 			os.Exit(1)
 		}
@@ -93,6 +93,7 @@ func main() {
 		noteStatus := "none"
 		noteDelegation := "none"
 		sharedUsers := "none"
+		
 
 		err = database.AddNote(title, noteType, description, formattedNoteCreated, taskCompletionDate, taskCompletionTime, noteStatus, noteDelegation, sharedUsers)
 		if err != nil {

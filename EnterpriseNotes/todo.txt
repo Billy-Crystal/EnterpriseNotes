@@ -1,3 +1,2 @@
-Search function - postgres FTS
 
-update fts_text
+
