@@ -1,2 +1,7 @@
-Sort out github
+setup users
 
+add noteOwner attribute
+
+add function to add/update sharing details
+
+gin web api framework
