@@ -153,7 +153,7 @@ Usage:
   notes list
   notes add <type> <title> <description>
   notes search <search-pattern>
-  notes find <id> <text-pattern>
+  notes find <id> <text-pattern> (only searches over )
   notes update <id> <description>
   notes remove <id>
   
