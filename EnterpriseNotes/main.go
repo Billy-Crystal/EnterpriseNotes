@@ -10,9 +10,6 @@ import (
 	"github.com/AlexGithub777/EnterpriseNotes/dbsetup"
 )
 
-// DATABASE_URL should be set with your PostgreSQL database connection details
-var DATABASE_URL = "postgres://postgres:postgres@localhost:5432/postgres"
-
 
 func main() {
 	var err error
@@ -24,13 +21,10 @@ func main() {
 	}
 	defer dbInstance.Conn.Close(context.Background())
 
-	
-
 	if len(os.Args) == 1 {
 		printHelp()
 		os.Exit(0)
 	}
-
 
     // Switch statement to handle different commands
     switch os.Args[1] {
@@ -80,8 +74,6 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Unable to add note: %v\n", err)
 			os.Exit(1)
 		}
-
-		
 
 	case "update":
 		n, err := strconv.ParseInt(os.Args[2], 10, 32)
@@ -144,9 +136,6 @@ func main() {
 		fmt.Printf("Text snippet '%s' found %d times in the note:\n%s\n", snippetPattern, count, description)
 		fmt.Printf("Analysis: Text snippet patterns found %d times in the note\n", analysisCount)
 	
-	
-	
-
 	default:
 		fmt.Fprintln(os.Stderr, "Invalid command")
 		printHelp()
@@ -157,7 +146,7 @@ func main() {
 
 func printHelp() {
 	fmt.Print(`
-	Enterprise Notes
+Enterprise Notes
 
 Usage:
 
