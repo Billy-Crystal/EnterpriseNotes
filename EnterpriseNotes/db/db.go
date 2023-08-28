@@ -24,6 +24,17 @@ type PostgresDatabase struct {
     Conn *pgx.Conn // The connection to your PostgreSQL database
 }
 
+func NewPostgresDatabase(connectionString string) (*PostgresDatabase, error) {
+    Conn, err := pgx.Connect(context.Background(), connectionString)
+    if err != nil {
+        return nil, err
+    }
+
+    return &PostgresDatabase{
+        Conn: Conn,
+    }, nil
+}
+
 func (db *PostgresDatabase) ListNotes(ctx context.Context) error {
     query := `
         SELECT id, title, noteType, description, noteCreated, taskCompletionDate, taskCompletionTime, noteStatus, noteDelegation, sharedUsers
@@ -173,18 +184,4 @@ func countOccurrencesByKeywords(text string, keywords []string) int {
     }
 
     return count
-}
-
-
-
-
-func NewPostgresDatabase(connectionString string) (*PostgresDatabase, error) {
-    Conn, err := pgx.Connect(context.Background(), connectionString)
-    if err != nil {
-        return nil, err
-    }
-
-    return &PostgresDatabase{
-        Conn: Conn,
-    }, nil
 }
