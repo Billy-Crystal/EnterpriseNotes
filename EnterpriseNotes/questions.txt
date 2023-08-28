@@ -6,3 +6,5 @@ How to reference shared users within note
     should a note have a owner attribute, (by default set to note creatpr)
 
 should we store database data in a json and import?
+
+how many questions should we have?
