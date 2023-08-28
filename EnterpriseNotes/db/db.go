@@ -1,5 +1,5 @@
 // db.go
-package db
+package main
 
 import (
 	"context"
