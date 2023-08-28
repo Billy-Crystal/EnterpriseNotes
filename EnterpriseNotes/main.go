@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/AlexGithub777/EnterpriseNotes/dbsetup"
 )
 
 // DATABASE_URL should be set with your PostgreSQL database connection details
@@ -15,48 +17,26 @@ var DATABASE_URL = "postgres://postgres:postgres@localhost:5432/postgres"
 func main() {
 	var err error
 
-	db, err := NewPostgresDatabase(DATABASE_URL)
+	dbInstance, err := dbsetup.SetupDatabase()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to the database: %v\n", err)
 		os.Exit(1)
 	}
-	defer db.conn.Close(context.Background())
+	defer dbInstance.Conn.Close(context.Background())
 
-	// Create table called notes
-	notesTable := `
-	CREATE TABLE IF NOT EXISTS notes (
-		id SERIAL PRIMARY KEY,
-		title TEXT NOT NULL,
-		noteType TEXT NOT NULL,
-		description TEXT NOT NULL,
-		noteCreated TEXT NOT NULL,
-		taskCompletionTime TEXT,
-		taskCompletionDate TEXT,
-		noteStatus TEXT,
-		noteDelegation TEXT,
-		sharedUsers TEXT,
-		fts_text tsvector
-	)
-`
-	_, err = db.conn.Exec(context.Background(), notesTable)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to execute SQL command: %v\n", err)
-		os.Exit(1)
-	}
+	
 
 	if len(os.Args) == 1 {
 		printHelp()
 		os.Exit(0)
 	}
 
-	// Create a new instance of PostgresDatabase
-    database := &PostgresDatabase{conn: db.conn}
 
     // Switch statement to handle different commands
     switch os.Args[1] {
     case "list":
 
-        err := database.ListNotes(context.Background())
+        err := dbInstance.ListNotes(context.Background())
         if err != nil {
             fmt.Fprintf(os.Stderr, "Unable to list notes: %v\n", err)
             os.Exit(1)
@@ -95,7 +75,7 @@ func main() {
 		sharedUsers := "none"
 		
 
-		err = database.AddNote(title, noteType, description, formattedNoteCreated, taskCompletionDate, taskCompletionTime, noteStatus, noteDelegation, sharedUsers)
+		err = dbInstance.AddNote(title, noteType, description, formattedNoteCreated, taskCompletionDate, taskCompletionTime, noteStatus, noteDelegation, sharedUsers)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to add note: %v\n", err)
 			os.Exit(1)
@@ -109,7 +89,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Unable to convert note_id into int32: %v\n", err)
 			os.Exit(1)
 		}
-		err = database.UpdateNote(int(n), os.Args[3])
+		err = dbInstance.UpdateNote(int(n), os.Args[3])
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to update note: %v\n", err)
 			os.Exit(1)
@@ -121,7 +101,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Unable to convert note_id into int32: %v\n", err)
 			os.Exit(1)
 		}
-		err = database.RemoveNote(int(n))
+		err = dbInstance.RemoveNote(int(n))
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to remove note: %v\n", err)
 			os.Exit(1)
@@ -135,7 +115,7 @@ func main() {
         searchPattern := os.Args[2]
 
         // Perform full-text search
-        err := database.SearchNotes(searchPattern)
+        err := dbInstance.SearchNotes(searchPattern)
         if err != nil {
             fmt.Fprintf(os.Stderr, "Unable to search notes: %v\n", err)
             os.Exit(1)
@@ -153,13 +133,13 @@ func main() {
 		}
 		snippetPattern := os.Args[3]
 	
-		count, description, err := database.FindTextSnippetInNote(noteID, snippetPattern)
+		count, description, err := dbInstance.FindTextSnippetInNote(noteID, snippetPattern)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error while finding text snippet: %v\n", err)
 			os.Exit(1)
 		}
 	
-		analysisCount := database.AnalyzeTextSnippet(description)
+		analysisCount := dbInstance.AnalyzeTextSnippet(description)
 	
 		fmt.Printf("Text snippet '%s' found %d times in the note:\n%s\n", snippetPattern, count, description)
 		fmt.Printf("Analysis: Text snippet patterns found %d times in the note\n", analysisCount)
