@@ -187,4 +187,4 @@ func NewPostgresDatabase(connectionString string) (*PostgresDatabase, error) {
     return &PostgresDatabase{
         conn: conn,
     }, nil
-	}
+}
