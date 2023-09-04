@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/AlexGithub777/EnterpriseNotes/dbsetup"
+	"EnterpriseNotes/dbsetup"
 )
 
 

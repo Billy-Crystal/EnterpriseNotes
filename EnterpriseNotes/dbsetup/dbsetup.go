@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/AlexGithub777/EnterpriseNotes/db" // Import the package for database connections
+	"EnterpriseNotes/db" // Import the package for database connections
 )
 
 var DATABASE_URL = "postgres://postgres:postgres@localhost:5432/postgres"
