@@ -3,7 +3,7 @@ How to write tests for pgx module - use mock database?
 How to store users in db? - users table
 
 How to reference shared users within note
-    should a note have a owner attribute, (by default set to note creatpr)
+    should a note have a owner attribute, (by default set to note creator)
 
 should we store database data in a json and import?
 

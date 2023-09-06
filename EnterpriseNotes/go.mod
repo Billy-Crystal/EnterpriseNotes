@@ -1,4 +1,4 @@
-module github.com/AlexGithub777/EnterpriseNotes
+module EnterpriseNotes
 
 go 1.20
 
